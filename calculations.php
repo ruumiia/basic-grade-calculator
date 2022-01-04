@@ -3,32 +3,41 @@
 <style>
 <?php include 'design.css'; //css file for design ?>
 </style>
+<script>
+
+    //js functions for Midterm/Final Grade and Final Course Grade
+    function MidFinalGrade (a, b, c) {
+        
+        let d = 0;
+        
+        d = ((a / 3) + (b/3) + c).toFixed(2);
+
+            if (d > 100) {
+            d = 100;
+            }
+        
+
+        return d;
+    }   
+
+    function OverallCourseGrade (a, b) {  
+
+        let c = 0;
+        c = ((a / 3) + ((b*2)/3)).toFixed(2);
+
+        if (c > 100) {
+        c = 100;    
+        }
+
+        return c;  
+    }
+
+</script>
+
 </head>
 <body>
 <form>
 <?php 
-
-for ($x = 0; $x <= 1; $x++) { //initializing the variables to contain int values
-    $ExerciseScore[0][$x] = 0;
-    $ExerciseScore[1][$x] = 0;
-    $QuizScore[0][$x] = 0;
-    $QuizScore[1][$x] = 0;
-    if ($x < 2) {
-    $ExerciseSum[$x] = 0;
-    $AverageExe[$x] = 0;
-    $QuizSum[$x] = 0;
-    $AverageQuiz[$x] = 0;
-    $MajorExam[$x] = 0;
-    $MajorPercent[$x] = 0;
-    $ClassStand[$x] = 0;
-    $AttendGrade[$x] = 0;
-    $ValueBehavior[$x] = 0;
-    }
-}
-
-$MidGrade = 0;
-$FinalGrade = 0;
-$CourseGrade = 0;
 
 //assigning values from form input to php variables
 $StudentNum = $_POST["StudentNum"];
@@ -57,44 +66,51 @@ $AttendGrade[1] = $_POST["AttendGrade2"];
 $ValueBehavior[0] = $_POST["ValueBehavior1"];
 $ValueBehavior[1] = $_POST["ValueBehavior2"];
 
-//for loop to add up exercise and quiz scores
-
-for($x = 0; $x <= 2; $x++) {
-$ExerciseSum[0] += $ExerciseScore[0][$x];
-$ExerciseSum[1] += $ExerciseScore[1][$x];
-$QuizSum[0] += $QuizScore[0][$x];
-$QuizSum[1] += $QuizScore[1][$x];
-}
-
-//for loop to calculate averages of exercise and quiz scores, % of the major exam score, and class standing, rounded up to 2 decimals
-
-for ($x = 0; $x <= 1; $x++) {
-$AverageExe[$x] = (round($ExerciseSum[$x] / 3, 2));
-$AverageQuiz[$x] = (round($QuizSum[$x] / 3, 2));
-$MajorPercent[$x] = (round(($MajorExam[$x]/100)*50+50, 2));
-$ClassStand[$x] = (round(($AttendGrade[$x]*0.10) + ($ValueBehavior[$x]*0.10) + ($AverageExe[$x]*0.80), 2));
-}
-
-//calculation of midterm, final, and final course grades
-
-$MidGrade = (round(($ClassStand[0] / 3) + ($AverageQuiz[0]/3) + $MajorPercent[0],2));
-
-$FinalGrade = (round(($ClassStand[1] / 3) + ($AverageQuiz[1]/3) + $MajorPercent[1],2));
-
-$CourseGrade = (round(($MidGrade / 3) + (($FinalGrade*2)/3),2));
-
-//if conditions to place the grades to max of 100 if there's an excess 
-
-if ($MidGrade > 100) {
-    $MidGrade = 100;
-}
-if ($FinalGrade > 100) {
-    $FinalGrade = 100;
-}
-if ($CourseGrade > 100) {
-    $CourseGrade = 100;
-}
 ?>
+
+<script type="text/javascript">
+    
+    var ExerciseScores = <?php echo json_encode($ExerciseScore, JSON_NUMERIC_CHECK); ?>;
+    var QuizScores = <?php echo json_encode($QuizScore, JSON_NUMERIC_CHECK); ?>;    
+
+    //sum[0][0] & [0][1] = Midterm Exercise and Quiz Scores | sum[1][0] & [1][1] = Finals Exercise and Quiz Scores 
+    let sum = [[0, 0], [0, 0]]; 
+    //average[0][0] & [0][1] = Midterm Exercise and Quiz Averages | average[1][0] & [1][1] = Finals Exercise and Quiz Averages
+    let average = [[0, 0], [0, 0]]; 
+    let MajorPercent = [0, 0];
+    let ClassStand = [0, 0];
+    
+    //for loop for getting midterm and finals score sums and average
+    for (let x = 0; x < 2; x++) {
+        for (let y = 0; y <= 2; y++){
+            sum[0][x] += ExerciseScores[x][y];
+            sum[1][x] += QuizScores[x][y];
+        }
+        average[0][x] = (sum[0][x] / 3).toFixed(2);
+        average[1][x] = (sum[1][x] / 3).toFixed(2);
+    }
+    
+    var MajorExams = <?php echo json_encode($MajorExam, JSON_NUMERIC_CHECK); ?>;
+    
+    //for loop for getting major exam percentage
+    for (let x = 0; x < 2; x++) {
+    MajorPercent[x] = (MajorExams[x]/100)*50+50;
+    }
+    
+    var AttendGrades = <?php echo json_encode($AttendGrade, JSON_NUMERIC_CHECK); ?>;
+    var ValuesGrade = <?php echo json_encode($ValueBehavior, JSON_NUMERIC_CHECK); ?>;
+    
+    //for loop for getting class standing score
+    for (let x = 0; x < 2; x++) {
+        ClassStand[x] = ((AttendGrades[x]*0.10) + (ValuesGrade[x]*0.10) + (average[0][x]*0.80)).toFixed(2);
+    }
+
+    //function call
+    let MidGrade = MidFinalGrade(ClassStand[0], average[1][0], MajorPercent[0]);
+    let FinalGrade = MidFinalGrade(ClassStand[1], average[1][1], MajorPercent[1]);
+    let CourseFinal = OverallCourseGrade(MidGrade, FinalGrade);
+
+</script>
 
 <div class = 'div-border'> <!-- div containing student number and subject code text boxes -->
 Student Number: <?php echo "<input type='text' value='$StudentNum' readonly/>"; ?> <br/>
@@ -114,7 +130,8 @@ X1: &emsp;&emsp; X2: &emsp;&emsp; X3:  &emsp;&ensp; Average: <br/>
 <?php $x = $ExerciseScore[0][0]; echo "<input type='text' class = 'input-width2' value='$x' readonly/>"; ?> &emsp; 
 <?php $x = $ExerciseScore[0][1]; echo "<input type='text' class = 'input-width2' value='$x' readonly/>"; ?>  &emsp;
 <?php $x = $ExerciseScore[0][2]; echo "<input type='text' class = 'input-width2' value='$x' readonly/>"; ?>  &emsp;
-<?php echo "<input type='text' class = 'input-width2 input-readonly' value='$AverageExe[0]' readonly/>"; ?> 
+<input type='text' class = 'input-width2 input-readonly' id = "AveExercise1" readonly/>
+<script> document.getElementById("AveExercise1").value = average[0][0]; </script>
 
 <br/> <br/>
 
@@ -123,17 +140,21 @@ Q1: &emsp;&emsp; Q2: &emsp;&emsp; Q3:  &emsp;&ensp; Average: <br/>
 <?php $x = $QuizScore[0][0]; echo "<input type='text' class = 'input-width2' value='$x' readonly/>"; ?> &emsp; 
 <?php $x = $QuizScore[0][1]; echo "<input type='text' class = 'input-width2' value='$x' readonly/>"; ?> &emsp;
 <?php $x = $QuizScore[0][2]; echo "<input type='text' class = 'input-width2' value='$x' readonly/>"; ?> &emsp;
-<?php echo "<input type='text' class = 'input-width2 input-readonly' value='$AverageQuiz[0]' readonly/>"; ?>  <br/> <br/>
+<input type='text' class = 'input-width2 input-readonly' id = "AveQuiz1" readonly/>  <br/> <br/>
+<script> document.getElementById("AveQuiz1").value = average[1][0]; </script>
 
 <!--text box for midterm class standing-->
-Class Standing: <?php echo "<input type='text' class = 'input-width2 input-readonly' value='$ClassStand[0]' readonly/>"; ?> <br/> <br/>
+Class Standing: <input type='text' class = 'input-width2 input-readonly' id = "ClassStand1" readonly/> <br/> <br/>
+<script> document.getElementById("ClassStand1").value = ClassStand[0]; </script>
 
 <!--text boxes for midterm major exam score and the % score of the major exam-->
 Major Exam: <?php echo "<input type='text' class = 'input-width2' value='$MajorExam[0]' readonly/>"; ?> 
-% of Major Exam: <?php echo "<input type='text' class = 'input-width2 input-readonly' value='$MajorPercent[0]' readonly/>"; ?> <br/> <br/>
+% of Major Exam: <input type='text' class = 'input-width2 input-readonly' id = "MajorPercent1" readonly/> <br/> <br/>
+<script> document.getElementById("MajorPercent1").value = MajorPercent[0]; </script>
 
 <!--text box for midterm grade-->
-Midterm Grade: <?php echo "<input type='text' class = 'input-width2 input-readonly' value='$MidGrade' readonly/>"; ?>
+Midterm Grade: <input type='text' class = 'input-width2 input-readonly' id = "MidGrade" readonly/>
+<script> document.getElementById("MidGrade").value = MidGrade; </script>
 
 </div>
 <div class = 'div-column'> <!-- second div for second column -->
@@ -147,7 +168,8 @@ X1: &emsp;&emsp; X2: &emsp;&emsp; X3:  &emsp;&ensp; Average: <br/>
 <?php $x = $ExerciseScore[1][0]; echo "<input type='text' class = 'input-width2' value='$x' readonly/>"; ?> &emsp; 
 <?php $x = $ExerciseScore[1][1]; echo "<input type='text' class = 'input-width2' value='$x' readonly/>"; ?>  &emsp;
 <?php $x = $ExerciseScore[1][2]; echo "<input type='text' class = 'input-width2' value='$x' readonly/>"; ?>  &emsp;
-<?php echo "<input type='text' class = 'input-width2 input-readonly' value='$AverageExe[1]' readonly/>"; ?> 
+<input type='text' class = 'input-width2 input-readonly' id = "AveExercise2" readonly/>
+<script> document.getElementById("AveExercise2").value = average[0][1]; </script>
 
 <br/> <br/>
 
@@ -156,23 +178,29 @@ Q1: &emsp;&emsp; Q2: &emsp;&emsp; Q3:  &emsp;&ensp; Average: <br/>
 <?php $x = $QuizScore[1][0]; echo "<input type='text' class = 'input-width2' value='$x' readonly/>"; ?> &emsp; 
 <?php $x = $QuizScore[1][1]; echo "<input type='text' class = 'input-width2' value='$x' readonly/>"; ?> &emsp;
 <?php $x = $QuizScore[1][2]; echo "<input type='text' class = 'input-width2' value='$x' readonly/>"; ?> &emsp;
-<?php echo "<input type='text' class = 'input-width2 input-readonly' value='$AverageQuiz[1]' readonly/>"; ?> <br/> <br/>
+<input type='text' class = 'input-width2 input-readonly' id = "AveQuiz2" readonly/> <br/> <br/>
+<script> document.getElementById("AveQuiz2").value = average[1][1]; </script>
 
 <!--text box for final class standing-->
-Class Standing: <?php echo "<input type='text' class = 'input-width2 input-readonly' value='$ClassStand[1]' readonly/>"; ?> <br/> <br/>
+Class Standing: <input type='text' class = 'input-width2 input-readonly' id = "ClassStand2" readonly/> <br/> <br/>
+<script> document.getElementById("ClassStand2").value = ClassStand[1]; </script>
 
 <!--text boxes for final major exam score and the % score of the major exam-->
 Major Exam: <?php echo "<input type='text' class = 'input-width2' value='$MajorExam[1]' readonly/>"; ?> 
-% of Major Exam: <?php echo "<input type='text' class = 'input-width2 input-readonly' value='$MajorPercent[1]' readonly/>"; ?> <br/> <br/>
+% of Major Exam: <input type='text' class = 'input-width2 input-readonly' id = "MajorPercent2" readonly/> <br/> <br/>
+<script> document.getElementById("MajorPercent2").value = MajorPercent[1]; </script>
 
 <!--text box for final grade-->
-Final Grade: <?php echo "<input type='text' class = 'input-width2 input-readonly' value='$FinalGrade' readonly/>"; ?>
+Final Grade: <input type='text' class = 'input-width2 input-readonly' id = "FinalGrade" readonly/>
+<script> document.getElementById("FinalGrade").value = FinalGrade; </script>
 
 </div>
 </div>  
 <div class = 'div-border div-center'> <!--div to contain final course grade and back button -->
-Final Course Grade: <?php echo "<input type='text' class = 'input-width2 input-readonly' value='$CourseGrade' readonly/>"; ?> <br/> <br/>
-<input name="cmd_back" type="button" id="cmd_back" value="Back" onclick="location='GT1-1Vergara-AaronCharles.php'" />
+Final Course Grade: <input type='text' class = 'input-width2 input-readonly' id = "FinalCourse" readonly/> <br/> <br/>
+<script> document.getElementById("FinalCourse").value = CourseFinal; </script>
+
+<input name="cmd_back" type="button" id="cmd_back" value="Back" onclick="location='menu.php'" />
 
 </div>
 </form>
